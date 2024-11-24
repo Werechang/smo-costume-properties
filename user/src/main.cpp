@@ -23,68 +23,55 @@ struct ScenePlayHook : public mallow::hook::Trampoline<ScenePlayHook> {
     }
 };
 
-const char* bodyCostume = nullptr;
+const char* bodyCostumeInitPlayer = nullptr;
 
 struct PlayerActorInitHook : public mallow::hook::Inline<PlayerActorInitHook> {
     static void Callback(exl::hook::InlineCtx* ctx) {
-        bodyCostume = reinterpret_cast<const char*>(ctx->X[2]);
+        bodyCostumeInitPlayer = reinterpret_cast<const char*>(ctx->X[2]);
     }
 };
 
 struct PlayerConstInitHook : public mallow::hook::Inline<PlayerConstInitHook> {
     static void Callback(exl::hook::InlineCtx* ctx) {
-        const char* costumeConstFile = "ObjectData/CostumePlayerConst";
+        const char* costumeConstFile = "CostumePlayerConst";
 
 
         auto playerConstAppendix = reinterpret_cast<const char*>(ctx->X[0]);
-        if (bodyCostume == nullptr) {
+        if (bodyCostumeInitPlayer == nullptr) {
             ctx->X[0] =
                 reinterpret_cast<u64>(PlayerFunction::createMarioConst(playerConstAppendix));
             return;
         }
-        if (!al::isExistArchive(costumeConstFile)) {
-            mallow::log::logLine("%s not found!", costumeConstFile);
-            ctx->X[0] =
-                reinterpret_cast<u64>(PlayerFunction::createMarioConst(playerConstAppendix));
-            bodyCostume = nullptr;
-            return;
-        }
-        al::StringTmp<0x80> bymlFile{"%s%s", bodyCostume, playerConstAppendix};
+        al::StringTmp<0x80> bymlFile{"%s%s", bodyCostumeInitPlayer, playerConstAppendix};
         u8* byml = al::tryGetBymlFromObjectResource(costumeConstFile, bymlFile);
         if (!byml) {
-            mallow::log::logLine("PlayerConst Byaml not in archive for costume %s!", bodyCostume);
+            mallow::log::logLine("PlayerConst Byaml not in archive for costume %s!", bodyCostumeInitPlayer);
             ctx->X[0] =
                 reinterpret_cast<u64>(PlayerFunction::createMarioConst(playerConstAppendix));
-            bodyCostume = nullptr;
+            bodyCostumeInitPlayer = nullptr;
             return;
         }
         ctx->X[0] = reinterpret_cast<u64>(new PlayerConst(al::ByamlIter(byml)));
-        bodyCostume = nullptr;
+        bodyCostumeInitPlayer = nullptr;
     }
 };
 
+const char* animFile = nullptr;
+
 struct PlayerAnimReplaceResourceHook : public mallow::hook::Inline<PlayerAnimReplaceResourceHook> {
     static void Callback(exl::hook::InlineCtx* ctx) {
-        const char* costumeAnimFile = "ObjectData/CostumeAnimations";
+        const char* costumeAnimFile = "CostumeAnimations";
 
 
         const char* body = reinterpret_cast<const char*>(ctx->X[28]);
-        if (!al::isExistArchive(costumeAnimFile)) {
-            mallow::log::logLine("%s not found!", costumeAnimFile);
-            bodyCostume = nullptr;
-            return;
-        }
         u8* byml = al::tryGetBymlFromObjectResource(costumeAnimFile, body);
         if (!byml) {
             mallow::log::logLine("Animation Byaml not in archive for costume %s!", body);
-            bodyCostume = nullptr;
             return;
         }
         al::ByamlIter rootIt{byml};
-        const char* animFile = nullptr;
         if (!rootIt.tryGetStringByKey(&animFile, "Name")) {
             mallow::log::logLine("Name property not found in byaml for %s", body);
-            bodyCostume = nullptr;
             return;
         }
         ctx->X[2] = reinterpret_cast<u64>(animFile);
@@ -93,8 +80,10 @@ struct PlayerAnimReplaceResourceHook : public mallow::hook::Inline<PlayerAnimRep
 
 struct PlayerAnimReplaceModelHook : public mallow::hook::Inline<PlayerAnimReplaceModelHook> {
     static void Callback(exl::hook::InlineCtx* ctx) {
-        if (bodyCostume != nullptr)
-            ctx->X[2] = reinterpret_cast<u64>(bodyCostume);
+        if (animFile != nullptr) {
+            ctx->X[2] = reinterpret_cast<u64>(animFile);
+            animFile = nullptr;
+        }
     }
 };
 
