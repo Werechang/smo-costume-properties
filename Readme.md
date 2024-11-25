@@ -1,16 +1,56 @@
-# smo-exlaunch-base-clang
-A base project that allows you to create code mods for smo with exlaunch using clang.
-This also includes a custom actor factory to allow adding custom actors.
+# smo-costume-properties
+A Super Mario Odyssey mod that allows you to attach custom animations and custom player constants to a costume.
+(ex: giving space suit moon gravity, or add animal costumes with custom animations)
 
-This project uses [Sanae](https://github.com/Sanae6)'s [marsmallow](https://github.com/odyssey-modding/marshmallow) as a base. Marsmallow allows you to make switch mods using clang.
+## Usage
+This mod introduces two archives:
+- ObjectData/CostumeAnimations.szs for custom animations
+- ObjectData/CostumePlayerConst.szs for player const modifications
 
-## Original Marshmallow Readme
-------------------------------
-A clang based version of [exlaunch](https://github.com/shadowninja108/exlaunch/) with some useful built-in tools.
-Supporting clang directly allows better integration with IDEs via clangd and various other clang tools.
-This project does not depend on the devkitPro switch toolchain.
+You have to create them by yourself.
+### CostumeAnimations
+You can replace the costume animations by adding a byml file with the (internal) name of your costume.
+This byml has a string property "Name" at the root of the file, which contains the name of the animation archive located in ObjectData.
+Example:
+```
+CostumeAnimations.szs:
+ - Mario64.byml
+ - MyOwnNiceCostume.byml
+```
 
-## Setup
+Mario64.byml (with the default animation file ObjectData/PlayerAnimation.szs):
+```yaml
+root:
+  - Name: "PlayerAnimation"
+```
+
+
+MyOwnNiceCostume.byml (with the animation file ObjectData/MyOwnPlayerAnimationFile.szs):
+```yaml
+root:
+  - Name: "MyOwnPlayerAnimationFile"
+```
+### CostumePlayerConst
+This works pretty much the same as animations. \
+You can apply the costume's player const by adding a byml file with the (internal) name of your costume.
+The byml file works exactly like a normal PlayerConst.byml (PlayerActorHakoniwa/PlayerConstMoon.byml for reference). \
+**Important**: This does not apply if you are on the moon!
+You have to create a `[CostumeName]Moon.byml` for that! \
+Example:
+```
+CostumeAnimations.szs:
+ - Mario64.byml
+ - MyOwnNiceCostume.byml
+ - MyOwnNiceCostumeMoon.byml
+```
+
+### Notes
+1. Issues? Read the readme again
+2. Make sure that your archives are not corrupted.
+3. Enabling logging gives you hints on what you might have missed.
+4. The mod will resort to default animations and player const if nothing was found.
+
+## Building
 The only supported host platforms are Windows and Linux.
 
 Dependencies: [CMake](https://cmake.org/)(>=v3.21) and [Ninja](https://ninja-build.org/).  
@@ -42,9 +82,7 @@ If you want network logging, you can make a json file at `sd:/mallow.json` with 
   }
 }
 ```
-Hosting a log server on Linux (not WSL!) is as easy as running `nc -lk 3080`.
-On Windows, there is an included logserver.js which also opens a raw tcp server.
-You will need Node.js if you want to use logserver.js, otherwise you should make your own log server.
+
 
 ### CMake definition arguments:
 - `-DFTP_IP=XXX.XXX.XXX.XXX`
@@ -67,6 +105,7 @@ You will need Node.js if you want to use logserver.js, otherwise you should make
   - [SMO-Exlaunch-Base](https://github.com/CraftyBoss/SMO-Exlaunch-Base/)
 - [Atmosphère contributors](https://github.com/Atmosphere-NX/Atmosphere/graphs/contributors)
   - [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere/)
+- [marsmallow](https://github.com/odyssey-modding/marshmallow)
 - [Thog](https://github.com/Thog)
   - [oss-rtld](https://github.com/Thog/oss-rtld)
 ------------------------------

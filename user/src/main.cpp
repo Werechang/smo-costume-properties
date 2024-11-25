@@ -3,10 +3,8 @@
 #include "ActorFactory/actorPatches.h"
 
 #include "Library/Base/StringUtil.h"
-#include "Library/Controller/InputFunction.h"
 #include "Library/File/FileUtil.h"
 #include "Library/Resource/ResourceHolder.h"
-#include "ModOptions.h"
 #include "Player/PlayerActorBase.h"
 #include "Player/PlayerConst.h"
 #include "Player/PlayerCostumeInfo.h"
@@ -14,14 +12,6 @@
 #include "Scene/StageScene.h"
 
 using mallow::log::logLine;
-
-struct ScenePlayHook : public mallow::hook::Trampoline<ScenePlayHook> {
-    static void Callback(StageScene* thisPtr) {
-        if (al::isPadTriggerL(-1) && mallow::config::getConfg<ModOptions>()->myModOption)
-            logLine("You pressed L while the game was unpaused and myModOption was enabled");
-        Orig(thisPtr);
-    }
-};
 
 const char* bodyCostumeInitPlayer = nullptr;
 
@@ -95,7 +85,6 @@ extern "C" void userMain() {
     exl::patch::CodePatcher patcher{0x41b704};
     patcher.WriteInst(exl::armv8::inst::Nop());
 
-    ScenePlayHook::InstallAtSymbol("_ZN10StageScene7exePlayEv");
     PlayerActorInitHook::InstallAtOffset(0x41b4e4);
     PlayerAnimReplaceResourceHook::InstallAtOffset(0x4440c4);
     PlayerAnimReplaceModelHook::InstallAtOffset(0x444158);

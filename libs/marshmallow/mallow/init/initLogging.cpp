@@ -48,7 +48,6 @@ struct nnMainHook : public mallow::hook::Trampoline<nnMainHook>{
 };
 
 void installHooks(){
-    nnMainHook::InstallAtSymbol("nnMain");
+    //nnMainHook::InstallAtSymbol("nnMain");
 }
-
 }
